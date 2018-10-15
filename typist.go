@@ -95,11 +95,13 @@ func (t *Typist) Errorln(a ...interface{}) (n int, err error) {
 
 // Must checks for error.
 // if not nil it exit the process according the configurations
-func (t *Typist) Must(err error) {
-	if err == nil {
+func (t *Typist) Must(params ...interface{}) {
+	lastParam := params[len(params)-1]
+	if lastParam == nil {
 		return
 	}
 
+	err := lastParam.(error)
 	t.Errorln(err.Error())
 	t.Finish(err)
 }
