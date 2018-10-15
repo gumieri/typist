@@ -55,6 +55,11 @@ func (t *Typist) Readln() (string, error) {
 	return bufio.NewReader(input).ReadString('\n')
 }
 
+// Copy redirect a io.Reader input to the defined output
+func (t *Typist) Copy(src io.Reader) (int64, error) {
+	return io.Copy(t.Out, src)
+}
+
 // Confirm wait for user response returning
 // `true` if the answer was y or yes
 func (t *Typist) Confirm(message string) bool {
