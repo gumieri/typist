@@ -136,6 +136,12 @@ func (t *Typist) Must(params ...interface{}) {
 	t.Exit(err)
 }
 
+// Exitf exit the process with the informed formatting string
+func (t *Typist) Exitf(format string, a ...interface{}) {
+	_, err := t.Errorf(format, a...)
+	t.Exit(err)
+}
+
 // Exit exit the process with (TODO) the right ERRNO code
 func (t *Typist) Exit(err error) {
 	switch err {
