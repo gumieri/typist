@@ -133,11 +133,11 @@ func (t *Typist) Must(params ...interface{}) {
 
 	err := lastParam.(error)
 	t.Errorln(err.Error())
-	t.Finish(err)
+	t.Exit(err)
 }
 
-// Finish exit the process with (TODO) the right ERRNO code
-func (t *Typist) Finish(err error) {
+// Exit exit the process with (TODO) the right ERRNO code
+func (t *Typist) Exit(err error) {
 	switch err {
 	case nil:
 		os.Exit(0)
