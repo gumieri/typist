@@ -8,66 +8,83 @@ import (
 	"strings"
 )
 
-// Typist has methods to interact with user
-// from command-line with some configurable behaviors
-type Typist struct {
+// Config of the Typist to be informend when creating one
+type Config struct {
 	Quiet bool
+	Err   io.Writer
 	Out   io.Writer
 	In    io.Reader
-	Err   io.Writer
 }
 
-// Printf printing information according Typist configurations
-func (t *Typist) Printf(format string, a ...interface{}) (n int, err error) {
-	if t.Quiet {
+// Typist has methods to interact with user
+// from command-line with some configurable behaviors
+type typist struct {
+	Config *Config
+}
+
+// New create a new Typist with the informed Config
+func New(config *Config) *Typist {
+	return &Typist{Config: config}
+}
+
+func (t *Typist) errput() (errput io.Writer) {
+	errput = t.Config.Err
+	if errput != nil {
 		return
 	}
 
-	output := t.Out
-	if output == nil {
-		output = os.Stdout
-	}
-
-	return fmt.Fprintf(output, format, a...)
+	errput = os.Stderr
+	return
 }
 
-// Println printing information according Typist configurations
-func (t *Typist) Println(a ...interface{}) (n int, err error) {
-	if t.Quiet {
+func (t *Typist) output() (output io.Writer) {
+	output = t.Config.Out
+	if output != nil {
 		return
 	}
 
-	output := t.Out
-	if output == nil {
-		output = os.Stdout
+	output = os.Stdout
+	return
+}
+
+func (t *Typist) input() (input io.Reader) {
+	input = t.Config.In
+	if input != nil {
+		return
 	}
 
-	return fmt.Fprintln(output, a...)
+	input = os.Stdin
+	return
+}
+
+// Outf printing information according Typist Config
+func (t *Typist) Outf(format string, a ...interface{}) (n int, err error) {
+	return fmt.Fprintf(t.output(), format, a...)
+}
+
+// Outln printing information according Typist Config
+func (t *Typist) Outln(a ...interface{}) (n int, err error) {
+	return fmt.Fprintln(t.output(), a...)
 }
 
 // Readln wait from break-line input and return as string
 func (t *Typist) Readln() (string, error) {
-	input := t.In
-	if input == nil {
-		input = os.Stdin
-	}
-
-	return bufio.NewReader(input).ReadString('\n')
+	return bufio.NewReader(t.input()).ReadString('\n')
 }
 
 // Copy redirect a io.Reader input to the defined output
 func (t *Typist) Copy(src io.Reader) (int64, error) {
-	return io.Copy(t.Out, src)
+	return io.Copy(t.Config.Out, src)
 }
 
 // Confirm wait for user response returning
 // `true` if the answer was y or yes
 func (t *Typist) Confirm(message string) bool {
-	if t.Quiet {
+	if t.Config.Quiet {
 		return false
 	}
 
-	t.Printf("%s [y/N] ", message)
+	t.Infof("%s [y/N] ", message)
 
 	response, err := t.Readln()
 	if err != nil {
@@ -78,28 +95,36 @@ func (t *Typist) Confirm(message string) bool {
 	return response == "y" || response == "yes"
 }
 
+// Infof print string to defined Err output
+func (t *Typist) Infof(format string, a ...interface{}) (int, error) {
+	return t.Errorf(format, a...)
+}
+
 // Errorf print strings to defined Err output
-func (t *Typist) Errorf(format string, a ...interface{}) (n int, err error) {
-	output := t.Err
-	if output == nil {
-		output = os.Stderr
+func (t *Typist) Errorf(format string, a ...interface{}) (int, error) {
+	if t.Config.Quiet {
+		return 0, nil
 	}
 
-	return fmt.Fprintf(output, format, a...)
+	return fmt.Fprintf(t.errput(), format, a...)
+}
+
+// Infoln print strings to defined Err output
+func (t *Typist) Infoln(a ...interface{}) (int, error) {
+	return t.Errorln(a...)
 }
 
 // Errorln print strings to defined Err output
-func (t *Typist) Errorln(a ...interface{}) (n int, err error) {
-	output := t.Err
-	if output == nil {
-		output = os.Stderr
+func (t *Typist) Errorln(a ...interface{}) (int, error) {
+	if t.Config.Quiet {
+		return 0, nil
 	}
 
-	return fmt.Fprintln(output, a...)
+	return fmt.Fprintln(t.errput(), a...)
 }
 
-// Must checks for error.
-// if not nil it exit the process according the configurations
+// Must checks for error. It accept any number of parameters and check if the last one is nil.
+// if not nil it exit the process according the Config
 func (t *Typist) Must(params ...interface{}) {
 	lastParam := params[len(params)-1]
 	if lastParam == nil {
