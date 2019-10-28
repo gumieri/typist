@@ -18,7 +18,7 @@ type Config struct {
 
 // Typist has methods to interact with user
 // from command-line with some configurable behaviors
-type typist struct {
+type Typist struct {
 	Config *Config
 }
 
