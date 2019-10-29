@@ -24,6 +24,14 @@ type Typist struct {
 
 // New create a new Typist with the informed Config
 func New(config *Config) *Typist {
+	if config.In == nil {
+		config.In = os.Stdin
+	}
+
+	if config.Out == nil {
+		config.Out = os.Stdout
+	}
+
 	return &Typist{Config: config}
 }
 
