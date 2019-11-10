@@ -6,14 +6,16 @@ import (
 	"io"
 	"os"
 	"strings"
+	"text/tabwriter"
 )
 
 // Config of the Typist to be informend when creating one
 type Config struct {
-	Quiet bool
-	Err   io.Writer
-	Out   io.Writer
-	In    io.Reader
+	Quiet  bool
+	Header bool
+	Err    io.Writer
+	Out    io.Writer
+	In     io.Reader
 }
 
 // Typist has methods to interact with user
@@ -129,6 +131,38 @@ func (t *Typist) Errorln(a ...interface{}) (int, error) {
 	}
 
 	return fmt.Fprintln(t.errput(), a...)
+}
+
+// Table parameters to print a table
+type Table struct {
+	Headers  []string
+	Lines    [][]string
+	Output   io.Writer
+	MinWidth int
+	TabWidth int
+	Padding  int
+	PadChar  byte
+	Flags    uint
+}
+
+// Table print a table
+func (t *Typist) Table(table *Table) {
+	output := table.Output
+	if output == nil {
+		output = t.output()
+	}
+
+	w := tabwriter.NewWriter(output, table.MinWidth, table.TabWidth, table.Padding, table.PadChar, table.Flags)
+
+	if t.Config.Header {
+		fmt.Fprintln(w, strings.Join(table.Headers, "\t"))
+	}
+
+	for _, line := range table.Lines {
+		fmt.Fprintln(w, strings.Join(line, "\t"))
+	}
+
+	w.Flush()
 }
 
 // Must checks for error. It accept any number of parameters and check if the last one is nil.
