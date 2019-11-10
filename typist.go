@@ -135,7 +135,7 @@ func (t *Typist) Errorln(a ...interface{}) (int, error) {
 
 // Table parameters to print a table
 type Table struct {
-	Headers  []string
+	Header   []string
 	Lines    [][]string
 	Output   io.Writer
 	MinWidth int
@@ -155,7 +155,7 @@ func (t *Typist) Table(table *Table) {
 	w := tabwriter.NewWriter(output, table.MinWidth, table.TabWidth, table.Padding, table.PadChar, table.Flags)
 
 	if t.Config.Header {
-		fmt.Fprintln(w, strings.Join(table.Headers, "\t"))
+		fmt.Fprintln(w, strings.Join(table.Header, "\t"))
 	}
 
 	for _, line := range table.Lines {
